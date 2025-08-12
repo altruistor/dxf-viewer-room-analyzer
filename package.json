@@ -3,7 +3,15 @@
   "private": false,
   "version": "1.0.0",
   "description": "A modern web application for viewing DXF files with intelligent room detection capabilities",
-  "keywords": ["dxf", "viewer", "room-detection", "cad", "react", "typescript", "canvas"],
+  "keywords": [
+    "dxf",
+    "viewer",
+    "room-detection",
+    "cad",
+    "react",
+    "typescript",
+    "canvas"
+  ],
   "homepage": "https://github.com/egorko/dxf-viewer-room-analyzer",
   "repository": {
     "type": "git",
@@ -16,7 +24,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
     "@mlightcad/libredwg-web": "^0.1.5",
@@ -32,6 +41,7 @@
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "gh-pages": "^6.3.0",
     "globals": "^16.3.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.0",

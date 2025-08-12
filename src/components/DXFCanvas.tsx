@@ -23,11 +23,13 @@ interface Room {
   isEnclosed: boolean;
 }
 
+/* Unused interfaces - kept for reference
 interface LineSegment {
   start: Point;
   end: Point;
   entity: DXFEntity;
 }
+*/
 
 // Новые типы для улучшенного алгоритма детекции комнат
 
@@ -106,6 +108,8 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
   }, []);
 
   // Кластеризация близких INSERT блоков
+  // @ts-expect-error - Unused function kept for reference
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const clusterNearbyInserts = useCallback((entities: DXFEntity[]): DXFEntity[][] => {
     const clusters: DXFEntity[][] = [];
     const used = new Set<number>();
@@ -462,6 +466,8 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
   }, [getEntityPoints]);
 
   // Новая улучшенная версия алгоритма комнат - безопасная, но функциональная
+  // @ts-expect-error - Unused function kept for reference
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const analyzeRoomsImproved = async () => {
     console.log('🚀🚀🚀 УЛУЧШЕННАЯ ВЕРСИЯ ЗАПУЩЕНА 🚀🚀🚀');
     console.log('🔥 Время:', new Date().toLocaleTimeString());
@@ -733,6 +739,8 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
   };
 
   // Функция для анализа замкнутых контуров (комнат) - оригинальная версия
+  // @ts-expect-error - Unused function kept for reference
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const analyzeRooms = () => {
     console.log('🔍 Анализ комнат начат (стандартный алгоритм)...');
     console.log(`📊 Всего объектов в данных: ${data.entities.length}`);
@@ -791,6 +799,8 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
   };
 
   // Новый алгоритм: анализ комнат по видимому канвасу
+  // @ts-expect-error - Unused function kept for reference
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const analyzeRoomsByCanvas = async () => {
     console.log('🎨🎨🎨 АНАЛИЗ ПО КАНВАСУ ЗАПУЩЕН 🎨🎨🎨');
     console.log('🔥 Время:', new Date().toLocaleTimeString());
