@@ -73,6 +73,14 @@ npm run build
 npm run preview
 ```
 
+### Deploy to GitHub Pages
+
+```bash
+npm run deploy
+```
+
+This will build the project and deploy it to GitHub Pages automatically.
+
 ## 📁 Project Structure
 
 ```
