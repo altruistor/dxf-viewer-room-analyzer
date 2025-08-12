@@ -10,8 +10,9 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          dxfParser: ['dxf-parser'],
-          libredwg: ['@mlightcad/libredwg-web']
+          dxfParser: ['dxf-parser']
+          // Temporarily exclude libredwg to reduce bundle size
+          // libredwg: ['@mlightcad/libredwg-web']
         }
       }
     },
