@@ -547,7 +547,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
               }
             }
           } catch (error) {
-            console.warn(`  ⚠️ Ошибка при обработке полилинии ${i}:`, error);
+            console.warn(`  WARNING: Ошибка при обработке полилинии ${i}:`, error);
           }
         }
         
@@ -588,7 +588,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
                 }
               }
             } catch (error) {
-              console.warn('  ⚠️ Ошибка при обработке линии:', error);
+              console.warn('  WARNING: Ошибка при обработке линии:', error);
             }
           }
         }
@@ -717,7 +717,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
               }
             }
           } catch (error) {
-            console.warn(`  ⚠️ Ошибка при обработке круга:`, error);
+            console.warn(`  WARNING: Ошибка при обработке круга:`, error);
           }
         }
       }
@@ -754,7 +754,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
   const analyzeRooms = () => {
     console.log('🔍 Анализ комнат начат (стандартный алгоритм)...');
     console.log(`📊 Всего объектов в данных: ${data.entities.length}`);
-    console.log(`👁️ Видимых слоев: ${Array.from(visibleLayers)}`);
+    console.log(`VISIBLE: Видимых слоев: ${Array.from(visibleLayers)}`);
     
     const rooms: Room[] = [];
     let polylineCount = 0;
@@ -766,7 +766,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
       return visibleLayers.has(fixedLayerName);
     });
     
-    console.log(`📋 Видимых объектов после фильтрации: ${visibleEntities.length}`);
+    console.log(`LIST: Видимых объектов после фильтрации: ${visibleEntities.length}`);
     
     // Ищем замкнутые полилинии (готовые комнаты) только среди видимых
     visibleEntities.forEach((entity, index) => {
@@ -796,7 +796,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
             console.log(`    ❌ Площадь ${area.toFixed(0)} не подходит (нужно 1000-10000000)`);
           }
         } else {
-          console.log(`    ⚠️ Недостаточно точек: ${points.length} (нужно минимум 3)`);
+          console.log(`    WARNING: Недостаточно точек: ${points.length} (нужно минимум 3)`);
         }
       }
     });
@@ -830,7 +830,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
       });
       
       console.log(`🎨 Анализируем ${visibleEntities.length} видимых объектов из ${data.entities.length} общих`);
-      console.log(`👁️ Активные слои: ${Array.from(visibleLayers).join(', ')}`);
+      console.log(`VISIBLE: Активные слои: ${Array.from(visibleLayers).join(', ')}`);
       
       // Этап 1: Поиск готовых полилиний среди видимых объектов
       console.log('🔍 Этап 1: Поиск полилиний в видимых слоях...');
@@ -872,7 +872,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
               }
             }
           } catch (error) {
-            console.warn(`  ⚠️ Ошибка при обработке полилинии:`, error);
+            console.warn(`  WARNING: Ошибка при обработке полилинии:`, error);
           }
         }
       }
@@ -903,7 +903,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
               }
             }
           } catch (error) {
-            console.warn('  ⚠️ Ошибка при обработке линии:', error);
+            console.warn('  WARNING: Ошибка при обработке линии:', error);
           }
         }
       }
@@ -1007,7 +1007,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
               }
             }
           } catch (error) {
-            console.warn(`  ⚠️ Ошибка при обработке круга:`, error);
+            console.warn(`  WARNING: Ошибка при обработке круга:`, error);
           }
         }
       }
@@ -1053,7 +1053,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
       });
       
       console.log(`🎯 Анализируем ${visibleEntities.length} видимых объектов из ${data.entities.length} общих`);
-      console.log(`👁️ Активные слои: ${Array.from(visibleLayers).join(', ')}`);
+      console.log(`VISIBLE: Активные слои: ${Array.from(visibleLayers).join(', ')}`);
       
       // Диагностика типов объектов
       const entityTypes = new Map<string, number>();
@@ -1129,7 +1129,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
               console.log(`    ❌ Размер не подходит: площадь=${area.toFixed(0)}, размер=${width.toFixed(0)}×${height.toFixed(0)}`);
             }
           } else if (points.length > 0) {
-            console.log(`    ⚠️ Полилиния не замкнута или мало точек: замкнута=${isClosed}, точек=${points.length}`);
+            console.log(`    WARNING: Полилиния не замкнута или мало точек: замкнута=${isClosed}, точек=${points.length}`);
           }
         }
       }
@@ -1958,12 +1958,12 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
           <button onClick={handleResetView} title="Reset View">RESET</button>
         </div>
         <div className="pan-controls">
-          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y + 50 }))} title="Up">⬆️</button>
+          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y + 50 }))} title="Up">UP</button>
           <div className="pan-horizontal">
-            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x + 50 }))} title="Left">⬅️</button>
-            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x - 50 }))} title="Right">➡️</button>
+            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x + 50 }))} title="Left">LEFT</button>
+            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x - 50 }))} title="Right">RIGHT</button>
           </div>
-          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y - 50 }))} title="Down">⬇️</button>
+          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y - 50 }))} title="Down">DOWN</button>
         </div>
                 <div className="layer-controls">
           <button 
@@ -1971,7 +1971,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
             title="Layer Management"
             className={showLayerPanel ? 'active' : ''}
           >
-            📋 Layers ({visibleLayers.size}/{availableLayers.length})
+            LAYERS Layers ({visibleLayers.size}/{availableLayers.length})
           </button>
           {/* Other algorithms hidden - only correct algorithm left */}
           <button 
@@ -2015,7 +2015,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
           <div className="layers-header">
             <h4>Layer Management</h4>
             <button onClick={toggleAllLayers} className="toggle-all-button">
-              {visibleLayers.size === availableLayers.length ? '👁️‍🗨️ Hide All' : '👁️ Show All'}
+              {visibleLayers.size === availableLayers.length ? 'Hide All' : 'Show All'}
             </button>
           </div>
           <div className="layers-list">
@@ -2048,7 +2048,7 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
           <div className="rooms-header">
             <h4>Room Analysis</h4>
             <button onClick={() => setShowRoomAnalysis(false)} className="close-button">
-              ✕
+              X
             </button>
           </div>
           <div className="rooms-list">

@@ -91,7 +91,7 @@ export const ToolboxPanel: React.FC<ToolboxPanelProps> = ({ isOpen, onToggle }) 
         onClick={onToggle}
         title="Toggle Toolbox"
       >
-        {isOpen ? '✕' : '🧰'}
+        {isOpen ? 'X' : '🧰'}
       </button>
       
       <div className={`toolbox-panel ${isOpen ? 'open' : ''}`}>
