@@ -48,6 +48,16 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
   const [detectedRooms, setDetectedRooms] = useState<Room[]>([]);
   const [showRoomAnalysis, setShowRoomAnalysis] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [placedItems, setPlacedItems] = useState<Array<{
+    id: string;
+    type: string;
+    name: string;
+    icon: string;
+    x: number;
+    y: number;
+    color: string;
+  }>>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Function to fix encoding issues in layer names
   const fixEncoding = useCallback((str: string): string => {
@@ -1714,7 +1724,33 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
     }
     
     ctx.restore();
-  }, [data, width, height, zoom, pan, calculateBounds, drawEntity, visibleLayers, getEntityPoints, fixEncoding, detectedRooms, showRoomAnalysis]);
+
+    // Render placed items from toolbox (in screen coordinates)
+    if (placedItems.length > 0) {
+      placedItems.forEach((item) => {
+        ctx.save();
+        
+        // Convert canvas coordinates back to screen coordinates
+        const screenX = item.x * zoom + pan.x + width / 2;
+        const screenY = item.y * zoom + pan.y + height / 2;
+        
+        ctx.fillStyle = item.color;
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Draw the icon
+        ctx.fillText(item.icon, screenX, screenY);
+        
+        // Draw a small label with the item name
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.font = '12px Arial';
+        ctx.fillText(item.name, screenX, screenY + 25);
+        
+        ctx.restore();
+      });
+    }
+  }, [data, width, height, zoom, pan, calculateBounds, drawEntity, visibleLayers, getEntityPoints, fixEncoding, detectedRooms, showRoomAnalysis, placedItems]);
 
   // Обработка клавиш для панорамирования
   useEffect(() => {
@@ -1864,6 +1900,55 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
     };
   }, [handleWheel]);
 
+  // Drag and drop event handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    try {
+      const itemData = e.dataTransfer.getData('application/json');
+      if (!itemData) return;
+      
+      const item = JSON.parse(itemData);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Convert screen coordinates to canvas coordinates
+      const canvasX = (x - width / 2 - pan.x) / zoom;
+      const canvasY = (y - height / 2 - pan.y) / zoom;
+      
+      const newItem = {
+        id: Date.now().toString(),
+        type: item.type,
+        name: item.name,
+        icon: item.icon,
+        x: canvasX,
+        y: canvasY,
+        color: item.color || '#007acc'
+      };
+      
+      setPlacedItems(prev => [...prev, newItem]);
+    } catch (error) {
+      console.error('Error handling drop:', error);
+    }
+  };
+
   return (
     <div className="dxf-canvas-container">
       <div className="canvas-controls">
@@ -2008,7 +2093,14 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        style={{ 
+          cursor: isDragging ? 'grabbing' : 'grab',
+          backgroundColor: isDragOver ? 'rgba(0, 122, 204, 0.1)' : 'transparent'
+        }}
       />
     </div>
   );

@@ -1,0 +1,213 @@
+/* Toolbox Toggle Button */
+.toolbox-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1002;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbox-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+.toolbox-toggle.open {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+/* Toolbox Panel */
+.toolbox-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-right: 2px solid rgba(102, 126, 234, 0.3);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 1001;
+  overflow-y: auto;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.toolbox-panel.open {
+  transform: translateX(0);
+}
+
+/* Toolbox Header */
+.toolbox-header {
+  padding: 80px 20px 20px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+}
+
+.toolbox-header h3 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.toolbox-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+/* Toolbox Content */
+.toolbox-content {
+  padding: 20px;
+}
+
+/* Toolbox Groups */
+.toolbox-group {
+  margin-bottom: 25px;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.group-icon {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.group-name {
+  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+}
+
+/* Group Items */
+.group-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* Toolbox Items */
+.toolbox-item {
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  padding: 15px 10px;
+  text-align: center;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.toolbox-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-color: #667eea;
+}
+
+.toolbox-item:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.toolbox-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+}
+
+.item-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.item-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  line-height: 1.2;
+}
+
+/* Toolbox Footer */
+.toolbox-footer {
+  padding: 20px;
+  border-top: 1px solid rgba(102, 126, 234, 0.2);
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.tip {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .toolbox-panel {
+    width: 280px;
+  }
+  
+  .toolbox-toggle {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .group-items {
+    grid-template-columns: 1fr;
+  }
+  
+  .toolbox-header {
+    padding: 70px 15px 15px 15px;
+  }
+  
+  .toolbox-header h3 {
+    font-size: 20px;
+  }
+}
+
+/* Drag Feedback */
+.toolbox-item[draggable="true"] {
+  cursor: grab;
+}
+
+.toolbox-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Animation for drag start */
+@keyframes dragStart {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(5deg);
+  }
+}
+
+.toolbox-item.drag-start {
+  animation: dragStart 0.2s ease;
+}

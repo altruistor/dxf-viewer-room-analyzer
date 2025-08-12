@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { DXFData } from '../types/dxf';
 import { DXFCanvas } from './DXFCanvas';
+import { ToolboxPanel } from './ToolboxPanel';
 import './DXFViewer.css';
 
 interface DXFViewerProps {
@@ -11,6 +12,7 @@ interface DXFViewerProps {
 export const DXFViewer: React.FC<DXFViewerProps> = ({ data, fileName }) => {
   const { header, entities, blocks, tables } = data;
   const [activeTab, setActiveTab] = useState<'canvas' | 'details'>('canvas');
+  const [isToolboxOpen, setIsToolboxOpen] = useState(false);
 
   const renderEntityInfo = (entity: typeof entities[0], index: number) => (
     <div key={index} className="entity-item">
@@ -27,6 +29,11 @@ export const DXFViewer: React.FC<DXFViewerProps> = ({ data, fileName }) => {
 
   return (
     <div className="dxf-viewer">
+      <ToolboxPanel 
+        isOpen={isToolboxOpen} 
+        onToggle={() => setIsToolboxOpen(!isToolboxOpen)} 
+      />
+      
       <div className="viewer-header">
         <h2>{fileName}</h2>
         <div className="file-stats">
