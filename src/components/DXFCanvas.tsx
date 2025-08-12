@@ -1015,35 +1015,334 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
       console.log('🔥 Индикатор анализа выключен');
     }
   };
-    console.log('�🚨🚨 НОВАЯ ПРОСТЕЙШАЯ ВЕРСИЯ ЗАПУЩЕНА 🚨🚨🚨');
+
+  // Правильный алгоритм поиска комнат по замкнутым контурам
+  const analyzeRoomsCorrect = () => {
+    console.log('🎯🎯🎯 ПРАВИЛЬНЫЙ АЛГОРИТМ ЗАПУЩЕН 🎯🎯🎯');
     console.log('🔥 Время:', new Date().toLocaleTimeString());
     
-    // Включаем индикатор анализа
     setIsAnalyzing(true);
-    console.log('🔥 Индикатор анализа включен');
+    const rooms: Room[] = [];
     
-    // Создаём одну тестовую комнату БЕЗ async/await
-    const testRooms: Room[] = [
-      {
-        id: 'simple_test_room',
-        bounds: { minX: 0, minY: 0, maxX: 1000, maxY: 1000 },
-        area: 1000000,
-        entities: [],
-        isEnclosed: true
+    try {
+      // Используем ТЕ ЖЕ объекты, что отображаются на канвасе
+      // Фильтруем по видимым слоям, как в рендере
+      const visibleEntities = data.entities.filter(entity => {
+        const fixedLayerName = fixEncoding(entity.layer);
+        return visibleLayers.has(fixedLayerName);
+      });
+      
+      console.log(`🎯 Анализируем ${visibleEntities.length} видимых объектов из ${data.entities.length} общих`);
+      console.log(`👁️ Активные слои: ${Array.from(visibleLayers).join(', ')}`);
+      
+      // Диагностика типов объектов
+      const entityTypes = new Map<string, number>();
+      visibleEntities.forEach(entity => {
+        const count = entityTypes.get(entity.type) || 0;
+        entityTypes.set(entity.type, count + 1);
+      });
+      console.log(`📊 Типы объектов:`, Object.fromEntries(entityTypes));
+      
+      if (visibleEntities.length === 0) {
+        console.warn('❌ Нет видимых объектов для анализа! Включите слои.');
+        setDetectedRooms([]);
+        setShowRoomAnalysis(true);
+        return [];
       }
-    ];
-    
-    console.log('🔥 Тестовая комната создана:', testRooms);
-    
-    // Устанавливаем результат
-    setDetectedRooms(testRooms);
-    console.log('🔥 Результат установлен');
-    
-    // Выключаем индикатор анализа
-    setIsAnalyzing(false);
-    console.log('🔥 Индикатор анализа выключен');
-    
-    console.log('🚨🚨🚨 НОВАЯ ПРОСТЕЙШАЯ ВЕРСИЯ ЗАВЕРШЕНА 🚨🚨🚨');
+      
+      // Этап 1: Ищем готовые замкнутые полилинии (это настоящие комнаты)
+      console.log('📐 Этап 1: Поиск замкнутых полилиний...');
+      let foundRooms = 0;
+      
+      let totalPolylines = 0;
+      let closedPolylines = 0;
+      
+      for (const entity of visibleEntities) {
+        if (entity.type === 'POLYLINE' || entity.type === 'LWPOLYLINE') {
+          totalPolylines++;
+          const points = getEntityPoints(entity);
+          
+          console.log(`  📐 Полилиния ${totalPolylines}: тип=${entity.type}, слой="${entity.layer}", точек=${points.length}`);
+          
+          // Проверяем, замкнута ли полилиния
+          const isClosed = entity.closed || (
+            points.length > 2 && 
+            Math.abs(points[0].x - points[points.length - 1].x) < 10 &&
+            Math.abs(points[0].y - points[points.length - 1].y) < 10
+          );
+          
+          if (isClosed) {
+            closedPolylines++;
+            console.log(`    ✅ Замкнутая полилиния найдена!`);
+          }
+          
+          if (isClosed && points.length >= 3) { // Уменьшили с 4 до 3
+            const area = calculatePolygonArea(points);
+            const bounds = calculateEntityBounds(points);
+            const width = bounds.maxX - bounds.minX;
+            const height = bounds.maxY - bounds.minY;
+            
+            console.log(`    📊 Размеры: ${width.toFixed(0)}×${height.toFixed(0)}, площадь=${area.toFixed(0)}`);
+            
+            // МАКСИМАЛЬНО ЛИБЕРАЛЬНЫЕ критерии для отладки
+            if (area > 10 && area < 1000000000 && width > 5 && height > 5) { // Ещё больше ослабили
+              const aspectRatio = Math.max(width, height) / Math.min(width, height);
+              
+              console.log(`    📏 Соотношение сторон: ${aspectRatio.toFixed(1)}`);
+              
+              // Максимально либеральное соотношение сторон
+              if (aspectRatio < 100) { // Ещё больше ослабили с 50 до 100
+                rooms.push({
+                  id: `closed_room_${foundRooms + 1}`,
+                  bounds,
+                  area,
+                  entities: [entity],
+                  isEnclosed: true
+                });
+                
+                foundRooms++;
+                console.log(`    ✅ НАЙДЕНА КОМНАТА ${foundRooms}: ${width.toFixed(0)}×${height.toFixed(0)}, площадь ${area.toFixed(0)}, слой "${entity.layer}"`);
+              } else {
+                console.log(`    ❌ Слишком вытянутая: ${aspectRatio.toFixed(1)}`);
+              }
+            } else {
+              console.log(`    ❌ Размер не подходит: площадь=${area.toFixed(0)}, размер=${width.toFixed(0)}×${height.toFixed(0)}`);
+            }
+          } else if (points.length > 0) {
+            console.log(`    ⚠️ Полилиния не замкнута или мало точек: замкнута=${isClosed}, точек=${points.length}`);
+          }
+        }
+      }
+      
+      console.log(`📐 Этап 1 завершён: всего полилиний=${totalPolylines}, замкнутых=${closedPolylines}, найдено комнат=${foundRooms}`);
+      
+      // Этап 2: Анализ прямоугольных областей (только если мало готовых комнат)
+      if (foundRooms < 10) { // Увеличили лимит
+        console.log('🔲 Этап 2: Поиск прямоугольных областей...');
+        
+        // Собираем все линии с их точными координатами
+        const allLines: Array<{
+          start: Point;
+          end: Point;
+          entity: DXFEntity;
+          length: number;
+          angle: number;
+          isHorizontal: boolean;
+          isVertical: boolean;
+        }> = [];
+        
+        for (const entity of visibleEntities) {
+          if (entity.type === 'LINE') {
+            const points = getEntityPoints(entity);
+            if (points.length >= 2) {
+              const start = points[0];
+              const end = points[1];
+              const dx = end.x - start.x;
+              const dy = end.y - start.y;
+              const length = Math.sqrt(dx * dx + dy * dy);
+              const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+              
+              // Определяем ориентацию линии (ослабленные критерии)
+              const isHorizontal = Math.abs(angle) < 15 || Math.abs(angle) > 165; // Ослабили с 10/170 до 15/165
+              const isVertical = Math.abs(angle - 90) < 15 || Math.abs(angle + 90) < 15; // Ослабили с 10 до 15
+              
+              if ((isHorizontal || isVertical) && length > 20) { // Ослабили с 50 до 20
+                allLines.push({
+                  start,
+                  end,
+                  entity,
+                  length,
+                  angle,
+                  isHorizontal,
+                  isVertical
+                });
+              }
+            }
+          }
+        }
+        
+        console.log(`  � Найдено ${allLines.length} подходящих линий`);
+        
+        // Группируем линии по направлениям
+        const horizontalLines = allLines.filter(line => line.isHorizontal);
+        const verticalLines = allLines.filter(line => line.isVertical);
+        
+        console.log(`  📏 Горизонтальных: ${horizontalLines.length}, вертикальных: ${verticalLines.length}`);
+        
+        // Ищем пары параллельных линий, которые могут образовать стены комнат
+        let rectangularRooms = 0;
+        
+        // Сортируем линии по позиции для лучшего поиска внутренних прямоугольников
+        const sortedHorizontal = horizontalLines.sort((a, b) => a.start.y - b.start.y);
+        const sortedVertical = verticalLines.sort((a, b) => a.start.x - b.start.x);
+        
+        console.log(`  📐 Поиск внутренних прямоугольников (комнат)...`);
+        
+        // Ищем ВНУТРЕННИЕ прямоугольники, ограничивая размер
+        for (let i = 0; i < sortedHorizontal.length && rectangularRooms < 10; i++) {
+          for (let j = i + 1; j < sortedHorizontal.length && rectangularRooms < 10; j++) {
+            const h1 = sortedHorizontal[i];
+            const h2 = sortedHorizontal[j];
+            
+            // Ослабленные ограничения для расстояния между линиями
+            const yDiff = Math.abs(h1.start.y - h2.start.y);
+            if (yDiff < 50 || yDiff > 10000) continue; // Ослабили с 200/5000 до 50/10000
+            
+            // Проверяем перекрытие по X
+            const h1MinX = Math.min(h1.start.x, h1.end.x);
+            const h1MaxX = Math.max(h1.start.x, h1.end.x);
+            const h2MinX = Math.min(h2.start.x, h2.end.x);
+            const h2MaxX = Math.max(h2.start.x, h2.end.x);
+            
+            const overlapX = Math.min(h1MaxX, h2MaxX) - Math.max(h1MinX, h2MinX);
+            if (overlapX < 50) continue; // Ослабили минимальную ширину с 200 до 50
+            
+            // Ищем вертикальные линии в пределах этих горизонтальных
+            for (let k = 0; k < sortedVertical.length && rectangularRooms < 10; k++) {
+              for (let l = k + 1; l < sortedVertical.length && rectangularRooms < 10; l++) {
+                const v1 = sortedVertical[k];
+                const v2 = sortedVertical[l];
+                
+                // Ослабленные ограничения для расстояния между вертикальными линиями
+                const xDiff = Math.abs(v1.start.x - v2.start.x);
+                if (xDiff < 50 || xDiff > 10000) continue; // Ослабили с 200/5000 до 50/10000
+                
+                // Объявляем координаты для использования в проверках
+                const v1X = v1.start.x; // У вертикальной линии X не должен меняться
+                const v2X = v2.start.x;
+                const h1Y = h1.start.y; // У горизонтальной линии Y не должен меняться
+                const h2Y = h2.start.y;
+                
+                // Проверяем, что вертикальные линии действительно пересекают горизонтальные
+                const minY = Math.min(h1Y, h2Y);
+                const maxY = Math.max(h1Y, h2Y);
+                
+                const v1MinY = Math.min(v1.start.y, v1.end.y);
+                const v1MaxY = Math.max(v1.start.y, v1.end.y);
+                const v2MinY = Math.min(v2.start.y, v2.end.y);
+                const v2MaxY = Math.max(v2.start.y, v2.end.y);
+                
+                // Ослабленная проверка покрытия линий
+                const v1CoversH = v1MinY <= minY + 200 && v1MaxY >= maxY - 200; // Ослабили с 100 до 200
+                const v2CoversH = v2MinY <= minY + 200 && v2MaxY >= maxY - 200;
+                
+                if (!v1CoversH || !v2CoversH) continue;
+                
+                // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: вертикальные линии должны быть между горизонтальными
+                const minX = Math.min(v1X, v2X);
+                const maxX = Math.max(v1X, v2X);
+                
+                const h1MinX = Math.min(h1.start.x, h1.end.x);
+                const h1MaxX = Math.max(h1.start.x, h1.end.x);
+                const h2MinX = Math.min(h2.start.x, h2.end.x);
+                const h2MaxX = Math.max(h2.start.x, h2.end.x);
+                
+                // Проверяем, что горизонтальные линии покрывают вертикальные с достаточным перекрытием
+                const h1CoversV = h1MinX <= minX + 50 && h1MaxX >= maxX - 50;
+                const h2CoversV = h2MinX <= minX + 50 && h2MaxX >= maxX - 50;
+                
+                if (!h1CoversV || !h2CoversV) {
+                  console.log(`    ❌ Горизонтальные линии не покрывают вертикальные: h1(${h1MinX.toFixed(0)}-${h1MaxX.toFixed(0)}) h2(${h2MinX.toFixed(0)}-${h2MaxX.toFixed(0)}) vs v(${minX.toFixed(0)}-${maxX.toFixed(0)})`);
+                  continue;
+                }
+                
+                // Формируем прямоугольник комнаты - ПРАВИЛЬНО определяем координаты
+                // Координаты уже объявлены выше
+                const rectMinX = Math.min(v1X, v2X);
+                const rectMaxX = Math.max(v1X, v2X);
+                
+                // Для горизонтальных линий Y-координата должна быть одинаковой у start и end  
+                const rectMinY = Math.min(h1Y, h2Y);
+                const rectMaxY = Math.max(h1Y, h2Y);
+                
+                const rectWidth = rectMaxX - rectMinX;
+                const rectHeight = rectMaxY - rectMinY;
+                const rectArea = rectWidth * rectHeight;
+                
+                console.log(`    🔍 Кандидат: ${rectWidth.toFixed(0)}×${rectHeight.toFixed(0)} (W×H), площадь ${rectArea.toFixed(0)}`);
+                console.log(`    📍 Координаты: X(${rectMinX.toFixed(0)}-${rectMaxX.toFixed(0)}), Y(${rectMinY.toFixed(0)}-${rectMaxY.toFixed(0)})`);
+                console.log(`    📏 Линии: H1(y=${h1Y.toFixed(0)}), H2(y=${h2Y.toFixed(0)}), V1(x=${v1X.toFixed(0)}), V2(x=${v2X.toFixed(0)})`);
+                
+                // Определяем ориентацию комнаты
+                const isHorizontal = rectWidth > rectHeight;
+                console.log(`    🧭 Ориентация: ${isHorizontal ? 'горизонтальная' : 'вертикальная'} (${rectWidth.toFixed(0)}×${rectHeight.toFixed(0)})`);
+                
+                
+                // Максимально ослабленные критерии для прямоугольных комнат
+                if (rectArea > 10 && rectArea < 1000000000 && // Ослабили с 100 до 10
+                    rectWidth > 10 && rectWidth < 50000 &&    // Ослабили с 50 до 10
+                    rectHeight > 10 && rectHeight < 50000) {  // Ослабили с 50 до 10
+                  
+                  const aspectRatio = Math.max(rectWidth, rectHeight) / Math.min(rectWidth, rectHeight);
+                  
+                  console.log(`    📐 Прямоугольник подходит по размеру, соотношение: ${aspectRatio.toFixed(1)}`);
+                  
+                  if (aspectRatio < 50) { // Ослабили с 20 до 50
+                    const bounds = {
+                      minX: rectMinX,
+                      maxX: rectMaxX,
+                      minY: rectMinY,
+                      maxY: rectMaxY
+                    };
+                    
+                    // Более либеральная проверка перекрытий
+                    const hasOverlap = rooms.some(existingRoom => {
+                      const overlapArea = Math.max(0, 
+                        Math.min(bounds.maxX, existingRoom.bounds.maxX) - Math.max(bounds.minX, existingRoom.bounds.minX)
+                      ) * Math.max(0,
+                        Math.min(bounds.maxY, existingRoom.bounds.maxY) - Math.max(bounds.minY, existingRoom.bounds.minY)
+                      );
+                      return overlapArea > rectArea * 0.3; // Ослабили с 0.1 до 0.3 (30% перекрытия допустимо)
+                    });
+                    
+                    if (!hasOverlap) {
+                      rooms.push({
+                        id: `rect_room_${rectangularRooms + 1}`,
+                        bounds,
+                        area: rectArea,
+                        entities: [h1.entity, h2.entity, v1.entity, v2.entity],
+                        isEnclosed: false
+                      });
+                      
+                      rectangularRooms++;
+                      const orientation = rectWidth > rectHeight ? 'горизонтальная' : 'вертикальная';
+                      console.log(`    ✅ НАЙДЕНА ПРЯМОУГОЛЬНАЯ КОМНАТА ${rectangularRooms}: ${rectWidth.toFixed(0)}×${rectHeight.toFixed(0)} (${orientation}), площадь ${rectArea.toFixed(0)}`);
+                    } else {
+                      console.log(`    ❌ Перекрытие с существующей комнатой`);
+                    }
+                  } else {
+                    console.log(`    ❌ Неподходящее соотношение сторон: ${aspectRatio.toFixed(1)}`);
+                  }
+                } else {
+                  console.log(`    ❌ Размер не подходит: площадь=${rectArea.toFixed(0)}, размер=${rectWidth.toFixed(0)}×${rectHeight.toFixed(0)}`);
+                }
+              }
+            }
+          }
+        }
+        
+        console.log(`� Этап 2 завершён: найдено ${rectangularRooms} прямоугольных комнат`);
+      }
+      
+      console.log(`🎯 Итого найдено: ${rooms.length} правильных комнат`);
+      
+      setDetectedRooms(rooms);
+      setShowRoomAnalysis(true);
+      
+      console.log('🎯🎯🎯 ПРАВИЛЬНЫЙ АЛГОРИТМ ЗАВЕРШЁН 🎯🎯🎯');
+      
+      return rooms;
+      
+    } catch (error) {
+      console.error('❌ Ошибка в правильном алгоритме:', error);
+      setDetectedRooms([]);
+      return [];
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const calculateScale = (bounds: Bounds, canvasWidth: number, canvasHeight: number) => {
     const drawingWidth = bounds.maxX - bounds.minX;
     const drawingHeight = bounds.maxY - bounds.minY;
     
@@ -1320,19 +1619,15 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
     }
     
     // Фильтруем видимые объекты с исправлением кодировки слоев
-    // Временно показываем все объекты для отладки
-    const visibleEntities = data.entities;
-    /*
     const visibleEntities = data.entities.filter(entity => {
       const fixedLayerName = fixEncoding(entity.layer);
       const isVisible = visibleLayers.has(fixedLayerName);
-      if (!isVisible) {
+      if (!isVisible && data.entities.indexOf(entity) < 5) {
         console.log(`Entity layer "${entity.layer}" (fixed: "${fixedLayerName}") not in visible layers`);
       }
       return isVisible;
     });
-    */
-    console.log(`Visible entities: ${visibleEntities.length}`);
+    console.log(`Visible entities: ${visibleEntities.length} из ${data.entities.length}`);
     
     // Вычисление границ чертежа только для видимых объектов
     const calculatedBounds = calculateBounds(visibleEntities);
@@ -1371,8 +1666,45 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
     
     console.log(`Rendered ${renderedCount} out of ${visibleEntities.length} entities`);
     
+    // Рендеринг найденных комнат красными прямоугольниками
+    if (detectedRooms.length > 0 && showRoomAnalysis) {
+      console.log(`Рендерим ${detectedRooms.length} найденных комнат`);
+      
+      detectedRooms.forEach((room, index) => {
+        // Настройка стиля для комнат
+        ctx.strokeStyle = '#ff0000'; // Красный цвет
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.1)'; // Полупрозрачная красная заливка
+        ctx.lineWidth = 2 / scale; // Толщина линии с учетом масштаба
+        
+        // Рисуем прямоугольник комнаты
+        const roomWidth = room.bounds.maxX - room.bounds.minX;
+        const roomHeight = room.bounds.maxY - room.bounds.minY;
+        
+        ctx.beginPath();
+        ctx.rect(room.bounds.minX, room.bounds.minY, roomWidth, roomHeight);
+        ctx.fill(); // Заливка
+        ctx.stroke(); // Контур
+        
+        // Добавляем номер комнаты
+        ctx.save();
+        ctx.scale(1, -1); // Возвращаем нормальную ориентацию текста
+        ctx.fillStyle = '#ff0000';
+        ctx.font = `${20 / scale}px Arial`; // Размер шрифта с учетом масштаба
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        const centerX = (room.bounds.minX + room.bounds.maxX) / 2;
+        const centerY = -((room.bounds.minY + room.bounds.maxY) / 2); // Инвертируем Y для текста
+        
+        ctx.fillText(`${index + 1}`, centerX, centerY);
+        ctx.restore();
+        
+        console.log(`  Комната ${index + 1}: ${roomWidth.toFixed(0)}×${roomHeight.toFixed(0)} на (${room.bounds.minX.toFixed(0)}, ${room.bounds.minY.toFixed(0)})`);
+      });
+    }
+    
     ctx.restore();
-  }, [data, width, height, zoom, pan, calculateBounds, drawEntity, visibleLayers, getEntityPoints, fixEncoding]);
+  }, [data, width, height, zoom, pan, calculateBounds, drawEntity, visibleLayers, getEntityPoints, fixEncoding, detectedRooms, showRoomAnalysis]);
 
   // Обработка клавиш для панорамирования
   useEffect(() => {
@@ -1526,101 +1858,54 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
     <div className="dxf-canvas-container">
       <div className="canvas-controls">
         <div className="zoom-controls">
-          <button onClick={handleZoomIn} title="Увеличить">+</button>
-          <button onClick={handleZoomOut} title="Уменьшить">-</button>
-          <button onClick={handleResetView} title="Сбросить вид">RESET</button>
+          <button onClick={handleZoomIn} title="Zoom In">+</button>
+          <button onClick={handleZoomOut} title="Zoom Out">-</button>
+          <button onClick={handleResetView} title="Reset View">RESET</button>
         </div>
         <div className="pan-controls">
-          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y + 50 }))} title="Вверх">⬆️</button>
+          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y + 50 }))} title="Up">⬆️</button>
           <div className="pan-horizontal">
-            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x + 50 }))} title="Влево">⬅️</button>
-            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x - 50 }))} title="Вправо">➡️</button>
+            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x + 50 }))} title="Left">⬅️</button>
+            <button onClick={() => setPan(prev => ({ ...prev, x: prev.x - 50 }))} title="Right">➡️</button>
           </div>
-          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y - 50 }))} title="Вниз">⬇️</button>
+          <button onClick={() => setPan(prev => ({ ...prev, y: prev.y - 50 }))} title="Down">⬇️</button>
         </div>
                 <div className="layer-controls">
           <button 
             onClick={() => setShowLayerPanel(!showLayerPanel)} 
-            title="Управление слоями"
+            title="Layer Management"
             className={showLayerPanel ? 'active' : ''}
           >
-            📋 Слои ({visibleLayers.size}/{availableLayers.length})
+            📋 Layers ({visibleLayers.size}/{availableLayers.length})
           </button>
+          {/* Other algorithms hidden - only correct algorithm left */}
           <button 
             onClick={() => {
-              const rooms = analyzeRooms();
-              setShowRoomAnalysis(!showRoomAnalysis);
-              console.log('Найденные комнаты (стандартный алгоритм):', rooms);
-            }} 
-            title="Анализ комнат (стандартный)"
-            className={showRoomAnalysis ? 'active' : ''}
-          >
-            🏠 Комнаты ({detectedRooms.length})
-          </button>
-          <button 
-            onClick={async () => {
-              console.log('🔵 Кнопка "Улучшенный" нажата');
+              console.log('🎯 "Correct Algorithm" button clicked');
               
               if (isAnalyzing) {
-                console.log('🟡 Анализ уже выполняется, игнорируем нажатие');
-                return; // Предотвращаем повторные нажатия
-              }
-              
-              console.log('🟢 Начинаем выполнение улучшенного алгоритма...');
-              
-              try {
-                console.log('🔄 Вызываем analyzeRoomsImproved()...');
-                const rooms = await analyzeRoomsImproved();
-                console.log('✅ analyzeRoomsImproved() завершён, результат:', rooms);
-                
-                setShowRoomAnalysis(true);
-                console.log('✅ Панель анализа комнат включена');
-                
-                console.log('🏠 Найденные комнаты (улучшенный алгоритм):', rooms);
-              } catch (error) {
-                console.error('❌ Ошибка при выполнении улучшенного алгоритма:', error);
-                alert('Произошла ошибка при анализе комнат. Попробуйте стандартный алгоритм.');
-              }
-              
-              console.log('🔵 Обработка нажатия кнопки завершена');
-            }} 
-            title="Анализ комнат (улучшенный алгоритм)"
-            className={showRoomAnalysis ? 'active' : ''}
-            disabled={isAnalyzing}
-          >
-            {isAnalyzing ? '⏳ Анализ...' : `🏠+ Улучшенный (${detectedRooms.length})`}
-          </button>
-          <button 
-            onClick={async () => {
-              console.log('🎨 Кнопка "По канвасу" нажата');
-              
-              if (isAnalyzing) {
-                console.log('🟡 Анализ уже выполняется, игнорируем нажатие');
+                console.log('🟡 Analysis already running, ignoring click');
                 return;
               }
               
-              console.log('🟢 Начинаем анализ по видимому канвасу...');
+              console.log('🟢 Starting correct room analysis...');
               
               try {
-                const rooms = await analyzeRoomsByCanvas();
-                console.log('✅ Анализ по канвасу завершён, результат:', rooms);
-                
-                setShowRoomAnalysis(true);
-                console.log('✅ Панель анализа комнат включена');
-                
-                console.log('🎨 Найденные комнаты по канвасу:', rooms);
+                const rooms = analyzeRoomsCorrect();
+                console.log('✅ Correct analysis completed, result:', rooms);
+                console.log('🎯 Found rooms (correct algorithm):', rooms);
               } catch (error) {
-                console.error('❌ Ошибка при анализе по канвасу:', error);
-                alert('Произошла ошибка при анализе комнат по канвасу.');
+                console.error('❌ Error in correct algorithm:', error);
+                alert('An error occurred in the correct room analysis.');
               }
               
-              console.log('🎨 Обработка нажатия кнопки завершена');
+              console.log('🎯 Button click processing completed');
             }} 
-            title="Анализ комнат по видимому канвасу"
+            title="Correct room analysis using geometry"
             className={showRoomAnalysis ? 'active' : ''}
             disabled={isAnalyzing}
           >
-            {isAnalyzing ? '⏳ Анализ...' : `🎨 По канвасу (${detectedRooms.length})`}
+            {isAnalyzing ? '⏳ Analyzing...' : `🎯 Correct Algorithm (${detectedRooms.length})`}
           </button>
         </div>
         <div className="info-panel">
@@ -1633,9 +1918,9 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
             {showLayerPanel && (
         <div className="layers-panel">
           <div className="layers-header">
-            <h4>Управление слоями</h4>
+            <h4>Layer Management</h4>
             <button onClick={toggleAllLayers} className="toggle-all-button">
-              {visibleLayers.size === availableLayers.length ? '👁️‍🗨️ Скрыть все' : '👁️ Показать все'}
+              {visibleLayers.size === availableLayers.length ? '👁️‍🗨️ Hide All' : '👁️ Show All'}
             </button>
           </div>
           <div className="layers-list">
@@ -1666,35 +1951,35 @@ export const DXFCanvas: React.FC<DXFCanvasProps> = ({
       {showRoomAnalysis && (
         <div className="rooms-panel">
           <div className="rooms-header">
-            <h4>Анализ комнат</h4>
+            <h4>Room Analysis</h4>
             <button onClick={() => setShowRoomAnalysis(false)} className="close-button">
               ✕
             </button>
           </div>
           <div className="rooms-list">
             {detectedRooms.length === 0 ? (
-              <p>Комнаты не найдены. Попробуйте нажать кнопку "🏠 Комнаты" для анализа.</p>
+              <p>No rooms found. Try clicking the "🎯 Correct Algorithm" button for analysis.</p>
             ) : (
               detectedRooms.map(room => (
                 <div key={room.id} className="room-item">
                   <div className="room-info">
                     <span className="room-name">{room.id}</span>
-                    <span className="room-type">{room.isEnclosed ? '🔒 Замкнутая' : '📐 По блокам'}</span>
-                    <span className="room-area">Площадь: {Math.round(room.area)} кв.ед.</span>
+                    <span className="room-type">{room.isEnclosed ? '🔒 Enclosed' : '📐 From Blocks'}</span>
+                    <span className="room-area">Area: {Math.round(room.area)} sq.units</span>
                     <span className="room-dimensions">
                       {Math.round(room.bounds.maxX - room.bounds.minX)} × {Math.round(room.bounds.maxY - room.bounds.minY)}
                     </span>
                   </div>
                   <button 
                     onClick={() => {
-                      // Центрируем вид на комнате
+                      // Center view on room
                       const centerX = (room.bounds.minX + room.bounds.maxX) / 2;
                       const centerY = (room.bounds.minY + room.bounds.maxY) / 2;
                       setPan({ x: width/2 - centerX, y: height/2 - centerY });
-                      setZoom(2); // Увеличиваем для лучшего обзора
+                      setZoom(2); // Zoom in for better view
                     }}
                     className="focus-room-button"
-                    title="Центрировать на комнате"
+                    title="Center on room"
                   >
                     🎯
                   </button>

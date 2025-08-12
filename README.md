@@ -1,163 +1,153 @@
-# React + TypeScript + Vite
+# DXF Viewer & Room Analyzer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern web application for importing, parsing, and displaying DXF (Drawing Exchange Format) files in the browser with advanced room detection capabilities.
 
-Currently, two official plugins are available:
+## 🏠 Room Detection Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This application includes intelligent room detection algorithms that can:
+- **Detect enclosed rooms** from closed polylines
+- **Analyze rectangular spaces** constructed from individual lines  
+- **Identify circular/rounded rooms** from circles and arcs
+- **Visual overlay** of detected rooms with numbering
+- **Room statistics** including area calculations and dimensions
 
-# DXF Viewer
+## 🚀 Features
 
-Веб-приложение для импорта, парсинга и отображения DXF файлов в браузере.
+- **DXF File Upload** - Drag & drop and file selection support
+- **DXF Parsing** - Using dxf-parser library
+- **Visual Rendering** - Drawing visualization on HTML5 Canvas
+- **Intelligent Room Detection**:
+  - 🏠 Automated room detection from closed polylines
+  - � Rectangle analysis from individual lines
+  - ⭕ Circular room detection
+  - 🎯 Advanced geometry-based algorithms
+  - 📊 Room statistics and measurements
+- **Drawing Navigation**:
+  - �🔍 Zoom (buttons, mouse wheel, +/- keys)
+  - 🖱️ Pan (mouse drag, buttons, arrows/WASD)
+  - 🏠 Reset view (reset button, 0 key)
+- **Layer Management** - Toggle visibility of individual layers
+- **Content Viewing** - Display headers, entities, and blocks
+- **Responsive Design** - Works on mobile devices and tablets
+- **Error Handling** - Informative error messages
 
-## 🚀 Возможности
+## 🛠️ Technology Stack
 
-- **Загрузка DXF файлов** - Поддержка drag & drop и выбора файлов
-- **Парсинг DXF** - Использование библиотеки dxf-parser
-- **Визуальное отображение** - Рендеринг чертежей на HTML5 Canvas
-- **Навигация по чертежу**:
-  - 🔍 Масштабирование (кнопки, колесо мыши, клавиши +/-)
-  - 🖱️ Панорамирование (перетаскивание мышью, кнопки, стрелки/WASD)
-  - 🏠 Сброс вида (кнопка "домик", клавиша 0)
-- **Управление слоями** - Включение/выключение видимости отдельных слоев
-- **Просмотр содержимого** - Отображение заголовков, объектов и блоков
-- **Адаптивный дизайн** - Работает на мобильных устройствах и планшетах
-- **Обработка ошибок** - Информативные сообщения об ошибках
+- **React 18** - Modern UI framework
+- **TypeScript** - Type safety and code reliability
+- **Vite** - Fast build tool and development server
+- **dxf-parser** - DXF file parsing library
+- **HTML5 Canvas** - High-performance 2D rendering
+- **CSS3** - Modern styling and animations
 
-## 🛠️ Технологии
+## 📦 Installation and Setup
 
-- **React 18** - Пользовательский интерфейс
-- **TypeScript** - Типизация и безопасность кода
-- **Vite** - Быстрая сборка и разработка
-- **dxf-parser** - Парсинг DXF файлов
-- **CSS3** - Современные стили и анимации
+### Prerequisites
 
-## 📦 Установка и запуск
+- Node.js (version 18 or higher)
+- npm or yarn
 
-### Предварительные требования
-
-- Node.js (версия 18 или выше)
-- npm или yarn
-
-### Установка зависимостей
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Запуск в режиме разработки
+### Development Mode
 
 ```bash
 npm run dev
 ```
 
-Приложение будет доступно по адресу [http://localhost:5173](http://localhost:5173)
+The application will be available at [http://localhost:5173](http://localhost:5173)
 
-### Сборка для продакшна
+### Production Build
 
 ```bash
 npm run build
 ```
 
-### Предварительный просмотр сборки
+### Preview Build
 
 ```bash
 npm run preview
 ```
 
-## 📁 Структура проекта
+## 📁 Project Structure
 
 ```
 src/
-├── components/          # React компоненты
-│   ├── FileUpload.tsx   # Компонент загрузки файлов
-│   ├── FileUpload.css   # Стили для загрузки
-│   ├── DXFViewer.tsx    # Компонент отображения DXF
-│   └── DXFViewer.css    # Стили для просмотра
-├── services/            # Бизнес логика
-│   └── dxfService.ts    # Сервис для работы с DXF
-├── types/               # TypeScript типы
-│   └── dxf.ts          # Типы для DXF данных
-├── App.tsx             # Главный компонент
-├── App.css             # Стили приложения
-├── main.tsx            # Точка входа
-└── index.css           # Глобальные стили
+├── components/          # React components
+│   ├── FileUpload.tsx   # File upload component
+│   ├── FileUpload.css   # Upload styling
+│   ├── DXFCanvas.tsx    # Main DXF viewer and room analyzer
+│   ├── DXFViewer.tsx    # DXF display component
+│   └── DXFViewer.css    # Viewer styling
+├── services/            # Business logic
+│   └── dxfService.ts    # DXF handling service
+├── types/               # TypeScript types
+│   └── dxf.ts          # DXF data types
+├── App.tsx             # Main component
+├── App.css             # Application styles
+├── main.tsx            # Entry point
+└── index.css           # Global styles
 ```
 
-## 🔧 Использование
+## 🔧 Usage
 
-1. **Загрузка файла**: Перетащите DXF файл в область загрузки или нажмите для выбора
-2. **Парсинг**: Приложение автоматически парсит загруженный файл
-3. **Просмотр чертежа**:
-   - 🖼️ Вкладка "Просмотр чертежа" - визуальное отображение
-   - 📋 Вкладка "Детали файла" - техническая информация
-4. **Навигация**:
-   - **Масштабирование**: Колесо мыши, кнопки 🔍+/🔍-, клавиши +/-
-   - **Панорамирование**: Перетаскивание мышью, кнопки ⬆️⬇️⬅️➡️, стрелки или WASD
-   - **Сброс вида**: Кнопка ⌂, клавиша 0 или Home
-5. **Управление слоями**:
-   - Кнопка "📋 Слои" открывает панель управления
-   - Галочки рядом с названиями слоев включают/выключают их видимость
-   - Кнопка "👁️ Показать/Скрыть все" управляет всеми слоями сразу
-   - Цветные кружки показывают цвет каждого слоя
-6. **Новый файл**: Используйте кнопку "Загрузить другой файл" для работы с новым DXF
+1. **File Upload**: Drag & drop a DXF file into the upload area or click to select
+2. **Parsing**: The application automatically parses the uploaded file
+3. **View Drawing**:
+   - 🖼️ "Drawing View" tab - visual representation
+   - 📋 "File Details" tab - technical information
+4. **Room Analysis**:
+   - Click the "🎯 Correct Algorithm" button to detect rooms
+   - Detected rooms appear as red overlays with numbers
+   - Use the "Room Analysis" panel to view room details
+   - Click the 🎯 button next to any room to center the view on it
+5. **Navigation**:
+   - **Zoom**: Mouse wheel, 🔍+/🔍- buttons, +/- keys
+   - **Pan**: Mouse drag, ⬆️⬇️⬅️➡️ buttons, arrow keys or WASD
+   - **Reset View**: ⌂ button, 0 key or Home
+6. **Layer Management**:
+   - "📋 Layers" button opens the layer management panel
+   - Checkboxes next to layer names toggle their visibility
+   - "👁️ Show/Hide All" button controls all layers at once
+   - Colored circles show each layer's color
+7. **New File**: Use "Load Another File" button to work with a new DXF
 
-### ⌨️ Горячие клавиши
+### ⌨️ Keyboard Shortcuts
 
-- **W, A, S, D** или **стрелки** - панорамирование
-- **+ / -** - масштабирование
-- **0** или **Home** - сброс вида
+- **W, A, S, D** or **Arrow Keys** - pan around
+- **+ / -** - zoom in/out
+- **0** or **Home** - reset view
 
-## 📝 Поддерживаемые форматы
+## 📝 Supported Formats
 
-- `.dxf` - Drawing Exchange Format файлы
-- Поддержка различных версий DXF формата
+- `.dxf` - Drawing Exchange Format files
+- Support for various DXF format versions
 
-## 🤝 Развитие проекта
+## 🚀 Roadmap
 
-Планы на развитие:
+Development plans:
 
-- [x] Визуальное отображение DXF чертежей на Canvas
-- [x] Масштабирование и навигация по чертежу
-- [x] Управление видимостью слоев
-- [ ] Измерительные инструменты (расстояния, углы)
-- [ ] Экспорт в другие форматы (PNG, SVG, PDF)
-- [ ] Поддержка больших файлов с виртуализацией
-- [ ] Темная тема
-- [ ] Информация о координатах курсора
-- [ ] Поиск и выделение объектов
-- [ ] Печать чертежей
+- [x] Visual DXF drawing rendering on Canvas
+- [x] Drawing zoom and navigation
+- [x] Layer visibility management
+- [x] Intelligent room detection algorithms
+- [x] Room analysis and statistics
+- [ ] Measurement tools (distances, angles)
+- [ ] Export to other formats (PNG, SVG, PDF)
+- [ ] Large file support with virtualization
+- [ ] Dark theme
+- [ ] Cursor coordinate information
+- [ ] Object search and highlighting
+- [ ] Drawing printing
 
-## 📄 Лицензия
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
 
 MIT License
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default tseslint.config([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
