@@ -5,6 +5,18 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/dxf-viewer-room-analyzer/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          dxfParser: ['dxf-parser'],
+          libredwg: ['@mlightcad/libredwg-web']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  },
   server: {
     fs: {
       allow: ['..']
